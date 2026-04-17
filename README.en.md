@@ -1,98 +1,80 @@
-# 💰 **Bank Account** 💰
+# Bank Account
 
-🌐 Available in :  
+🌐 Available in :
 [🇫🇷 Français](README.md) | [🇬🇧 English](README.en.md)
 
-# Subject
+Bank account management application built with Java 21 / Spring Boot 3, following **hexagonal architecture** principles.
 
-This kata is a [hexagonal architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) challenge
-focused on the banking domain.
+---
 
-## ⚠️ Application Guidelines ⚠️
+## Functionalities
 
-> This kata has two objectives:
-> - First, to assess your technical skills as a candidate;
-> - Second, to serve as a foundation for your onboarding if you join us :smile:.
->
-> It is intentionally broad in scope.
->
-> **In the first case (recruitment process), we understand that time is a precious and limited resource.
-> That's why we offer three levels of commitment, depending on the time you can dedicate:**
->
-> 1. You have little time (one evening): Focus only on the business code.
->    - Ensure it is tested and functional, with test adapters.
->    - **We will not hold it against you if you do not complete the other parts.**
->    - **We will discuss any uncovered elements during the technical interview.**
-> 2. You have more time (several evenings): The business code, exposed via a REST API, and functional persistence; all thoroughly tested end-to-end.
-> 3. You have plenty of time and want to go further: The same, with application containerization and a CI/CD pipeline (you won’t be able to execute it, but show us what you’re capable of anyway) ;p
->
-> You will be evaluated on the following points:
->
-> - All delivered code must be adequately tested (both passing and failing cases).
-> - We will pay close attention to design, quality, and code readability (including commits).
->
-> We understand that each candidate has different time constraints, and we will value your ability to prioritize and
-> deliver quality work within the given time.
+- **Current account** — creation with configurable overdraft limit, deposit and withdrawal
+- **Savings account** — creation with deposit ceiling, no overdraft allowed
+- **Business rules** — withdrawal rejected if balance (including overdraft) is exceeded; deposit rejected if savings ceiling is reached
+- **Operations audit** — 30-day rolling history, sorted in reverse chronological order, accessible by account number
 
-## Implementation Guidelines
+---
 
-> To complete this kata:
-> - Create a branch from main.
-> - Perform your development on this branch.
-> - When you are ready to submit, open a merge request to main.
->
-> ⚠️ Opening your merge request will trigger the code review!
->
-> ⚠️ This merge request is for code review purposes, **DO NOT MERGE IT!**
+## Tech stack
 
-### Feature 1: Bank Account
+| Layer | Technology |
+|---|---|
+| Language | Java 21 |
+| Framework | Spring Boot 3.4.5 |
+| API Documentation | springdoc-openapi (Swagger UI) |
+| Testing | JUnit 5, Mockito, Spring MockMvc |
+| Containerization | Docker (multi-stage build) |
+| CI/CD | GitHub Actions |
 
-We want to implement a bank account feature.
+---
 
-The account must have:
+## Architecture
 
-- A unique account number (format is free).
-- A balance.
-- A deposit function.
-- A withdrawal function.
+The project follows **hexagonal architecture** (Ports & Adapters):
 
-The following business rule must be implemented:
+```
+domain/          → pure business model (Account, CurrentAccount, SavingsAccount, BankOperation)
+domain/port/     → use case interfaces (DepositUseCase, WithdrawUseCase, ...)
+application/     → use case implementations (AccountService)
+infrastructure/  → REST adapters (controllers, DTOs, mappers) and in-memory persistence
+```
 
-- A withdrawal cannot be made if it exceeds the account balance.
+The domain has zero framework dependencies. Spring only touches the infrastructure layer.
 
-__
+---
 
-### Feature 2: Overdraft
+## Running the application
 
-We want to implement an authorized overdraft system for bank accounts.
-The following business rule must be implemented:
+**With Maven:**
+```bash
+mvn spring-boot:run
+```
 
-__
+**With Docker:**
+```bash
+docker build -t bank-account .
+docker run -p 8080:8080 bank-account
+```
 
-- If an account has an overdraft authorization, a withdrawal that exceeds the account balance is allowed, provided the
-  final balance does not exceed the overdraft limit.
+The API is available at `http://localhost:8080`.
+Swagger UI is available at `http://localhost:8080/swagger-ui.html`.
 
-### Feature 3: Savings Account
+---
 
-We want to implement a savings account.
+## API
 
-A savings account is a bank account that:
-
-- Has a deposit ceiling: Money can only be deposited up to the account's ceiling (e.g., €22,950 for a Livret A).
-- Cannot have an overdraft authorization.
-
-__
-
-### Feature 4: Account Statement
-
-We want to implement a monthly account statement feature (rolling month) for account transactions.
-
-The statement must show:
-
-- The account type (Savings or Current Account).
-- The account balance as of the statement date.
-- The list of transactions on the account, sorted by date in reverse chronological order.
-
-## Good luck!
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/accounts` | Create a current account |
+| GET | `/accounts/{accountNumber}` | Get a current account |
+| POST | `/accounts/{accountNumber}/deposit` | Make a deposit |
+| POST | `/accounts/{accountNumber}/withdraw` | Make a withdrawal |
+| GET | `/accounts/{accountNumber}/audit` | Get operations history |
+| POST | `/savings-accounts` | Create a savings account |
+| GET | `/savings-accounts/{accountNumber}` | Get a savings account |
+| POST | `/savings-accounts/{accountNumber}/deposit` | Make a deposit on savings |
+| POST | `/savings-accounts/{accountNumber}/withdraw` | Make a withdrawal on savings |
+| GET | `/savings-accounts/{accountNumber}/audit` | Get savings operations history |
 
 ![hexagonal architecture](./assets/hexa-schema.png)
