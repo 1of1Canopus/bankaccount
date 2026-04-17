@@ -1,0 +1,8 @@
+/.idea/
+*.iml
+/target/
+*.docx
+INTERVIEW_PREP.md
+IMPLEMENTATION.md
+INFRASTRUCTURE.md
+GITHUB_ACTIONS.md
